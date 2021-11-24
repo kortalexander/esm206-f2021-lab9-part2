@@ -1,0 +1,11 @@
+---
+title: 'Lab 9 Part 2: Chi-square with lizard tails'
+author: "Kort Alexander and Chelsie McWhorter"
+date: "11/24/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
