@@ -7,5 +7,71 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
 ```
 
+## Read in data
+
+```{r}
+lizards <- read_csv(here("data", "lizards.csv"))
+```
+
+Get counts of lizards by species:
+```{r}
+lizards %>% 
+  count(spp) %>% 
+  arrange(-n)
+```
+
+## Make a subset
+
+- UTST lizards
+- Sites: IBPE (enclosure grassland), RABB (rabbit mesquite), EAST (east tarbush site)
+- Tail condition is recorded (W = whole, B = broken)
+
+```{r}
+utst <- lizards %>% 
+  filter(spp == "UTST") %>% 
+  filter(site %in% c("IBPE", "RABB", "EAST")) %>% 
+  filter(tail %in% c("B", "W"))
+```
+
+## Find counts and proportions of lizards with broken or whole tails at each site
+
+```{r}
+utst %>% 
+  count(site, tail)
+```
+
+```{r}
+tail_counts <- utst %>% 
+  janitor::tabyl(site, tail)
+
+tail_proportions <- tail_counts %>% 
+  janitor::adorn_percentages() %>% 
+  janitor::adorn_pct_formatting(digits = 2) %>% 
+  janitor::adorn_ns()
+```
+
+## Convert to a contingency table
+
+Use 'column_to_rowname()'.
+
+```{r}
+lizard_ct <- tail_counts %>% 
+  column_to_rownames(var = "site")
+```
+
+## Chi-square
+
+```{r}
+lizard_x2 <- chisq.test(lizard_ct)
+lizard_x2
+
+lizard_tidy <- broom::tidy(lizard_x2)
+```
+
+There is a significant association (i.e. non-independence) between site and lizard tail breakage ($\chi$^2^(`r lizard_tidy$parameter`) = `r lizard_tidy$statistic`, *p* = `r lizard_tidy$p.value`).
